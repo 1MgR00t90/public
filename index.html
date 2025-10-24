@@ -100,8 +100,8 @@
 <body>
   <div class="container">
 <div class="pandoc-content">
-<h1 id="penetration-test-report-network-management-system-application-stored-reflected-xss-cross-site-scripting"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /></svg><span class="sr-only">Report</span>Penetration Test Report: Network Management System application — Stored/Reflected XSS (cross-site scripting)</h1>
-<h1 id="preface"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /></svg><span class="sr-only">Preface</span>Preface</h1>
+<h1 id="penetration-test-report-network-management-system-application-stored-reflected-xss-cross-site-scripting">Penetration Test Report: Network Management System application — Stored/Reflected XSS (cross-site scripting)</h1>
+<h1 id="preface">Preface</h1>
 <p>This report documents a <strong>Manual</strong> Web Application
 pentest conducted with <strong>explicit permission</strong> from the
 system owner. The target/scope of the assessment was a <strong>network
@@ -119,7 +119,7 @@ vulnerabilities in any live or commercial system. All sensitive details
 have been removed or altered. No real-world system or data is
 disclosed.</p>
 </blockquote>
-<h2 id="system-profile"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /></svg><span class="sr-only">System Profile</span>System Profile</h2>
+<h2 id="system-profile">System Profile</h2>
 <blockquote>
 <p>The system utilizing both <strong>JavaScript</strong> on the frontend
 and <strong>Flask/Python</strong> on the backend; integrates with
@@ -150,13 +150,13 @@ dashboards designed for <strong>Network Operations Centers
       |  (4) JSON response to frontend
       v
 [ Frontend Renders Dashboard ]</code></pre>
-<h2 id="affected-path-endpoint"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /></svg><span class="sr-only">Affected Path and Endpoint</span>Affected Path &amp; Endpoint</h2>
+<h2 id="affected-path-endpoint">Affected Path &amp; Endpoint</h2>
 <ul>
 <li><strong>Path</strong>: <code>/firewall</code></li>
 <li><strong>Api-Endpoint</strong>:
 <code>/api/firewall/template/{template}/update</code></li>
 </ul>
-<h2 id="vulnerability-type"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /></svg><span class="sr-only">Vulnerability Type</span>Vulnerability Type</h2>
+<h2 id="vulnerability-type">Vulnerability Type</h2>
 <ul>
 <li>Stored (Persistent) XSS</li>
 <li>Reflected XSS</li>
@@ -174,7 +174,7 @@ XSS)</li>
 <p>Additionally, basic HTML tags such as <code>&lt;a&gt;</code> are
 rendered unsanitized, enabling phishing attacks through malicious
 links.</p>
-<h2 id="enumeration"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /></svg><span class="sr-only">Enumeration</span>Enumeration</h2>
+<h2 id="enumeration">Enumeration</h2>
 <table>
 <thead>
 <tr class="header">
@@ -232,7 +232,7 @@ path of the system</em>.</p>
 <img src="images/nms-frontpage.png" alt="nms-frontpage" />
 <figcaption aria-hidden="true">nms-frontpage</figcaption>
 </figure>
-<h2 id="proof-of-concept"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /></svg><span class="sr-only">Proof of Concept</span>Proof of Concept</h2>
+<h2 id="proof-of-concept">Proof of Concept</h2>
 <h3 id="reflected-xss">1. Reflected XSS</h3>
 <ul>
 <li>Payload: <code>&lt;script&gt;alert(1)&lt;/script&gt;</code></li>
@@ -263,7 +263,7 @@ External Links</h3>
 <li>Behavior: This link gets rendered and becomes clickable, allowing
 redirection to phishing sites or attacker-controlled domains.</li>
 </ul>
-<h2 id="payload-execution-sequence"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /></svg><span class="sr-only">Payload Execution Sequence</span>Payload Execution Sequence</h2>
+<h2 id="payload-execution-sequence">Payload Execution Sequence</h2>
 <p><em>An attacker submits a malicious payload to the comment field of
 the application. This payload is then stored in the backend database
 without proper sanitization. When the frontend retrieves and renders the
@@ -274,19 +274,18 @@ interface will unknowingly trigger the execution of the attacker’s
 payload in their browser</em></p>
 <p>Example of Vulnerable Code: <img src="images/vuln-code.png"
 alt="vuln-code" /></p>
-<div class="sourceCode" id="cb2"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">createRuleRow</span>(rule) {</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="vs">`&lt;td&gt;</span><span class="sc">${</span>rule<span class="op">.</span><span class="at">comment</span> <span class="op">||</span> <span class="st">&#39;&#39;</span><span class="sc">}</span><span class="vs">&lt;/td&gt;`</span><span class="op">;</span> <span class="co">// 🚨 No sanitization</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<h2 id="impact"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /></svg><span class="sr-only">Impact</span>Impact</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode javascript"><code class="sourceCode javascript">function createRuleRow(rule) {
+  return `&lt;td&gt;${rule.comment || ''}&lt;/td&gt;`; // 🚨 No sanitization
+}</code></pre></div>
+<h2 id="impact">Impact</h2>
 <ul>
 <li>Credential theft via phishing links</li>
 <li>Session hijacking through JavaScript execution</li>
 <li>CSRF or forced actions using stored scripts</li>
 <li>Redirects to attacker-controlled domains</li>
 </ul>
-<h2 id="recommendations-remediation"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /></svg><span class="sr-only">Recommendations and Remediation</span>Recommendations &amp; Remediation</h2>
-<h3 id="input-validation"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /></svg><span class="sr-only">Input Validation</span>Input Validation</h3>
+<h2 id="recommendations-remediation">Recommendations &amp; Remediation</h2>
+<h3 id="input-validation">Input Validation</h3>
 <ul>
 <li>Validate all user-supplied input on the server side.</li>
 <li>Disallow any unexpected or special characters in fields that should
@@ -294,21 +293,19 @@ not accept HTML or JavaScript.</li>
 <li>Enforce strong schema validation (e.g., using JSON schema or backend
 validators).</li>
 </ul>
-<h3 id="output-encoding-escaping"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /></svg><span class="sr-only">Output Encoding and Escaping</span>Output Encoding / Escaping</h3>
-<div class="sourceCode" id="cb3"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">escapeHtml</span>(text) {</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> text</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&amp;/g</span><span class="op">,</span> <span class="st">&quot;&amp;amp;&quot;</span>)</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&lt;/g</span><span class="op">,</span> <span class="st">&quot;&amp;lt;&quot;</span>)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span><span class="fu">replace</span>(<span class="op">/&gt;/</span>g<span class="op">,</span> <span class="st">&quot;&amp;gt;&quot;</span>)</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&quot;/g</span><span class="op">,</span> <span class="st">&quot;&amp;quot;&quot;</span>)</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span><span class="fu">replace</span>(<span class="ss">/&#39;/g</span><span class="op">,</span> <span class="st">&quot;&amp;#x27;&quot;</span>)<span class="op">;</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<div class="sourceCode" id="cb4"><pre
-class="sourceCode javascript"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">function</span> <span class="fu">createRuleRow</span>(rule) {</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="vs">`&lt;td&gt;</span><span class="sc">${</span><span class="fu">escapeHtml</span>(rule<span class="op">.</span><span class="at">comment</span> <span class="op">||</span> <span class="st">&#39;&#39;</span>)<span class="sc">}</span><span class="vs">&lt;/td&gt;`</span><span class="op">;</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<h3 id="content-sanitization"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /></svg><span class="sr-only">Content Sanitization</span>Content Sanitization</h3>
+<h3 id="output-encoding-escaping">Output Encoding / Escaping</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode javascript"><code class="sourceCode javascript">function escapeHtml(text) {
+  return text
+    .replace(/&amp;/g, "&amp;amp;")
+    .replace(/&lt;/g, "&amp;lt;")
+    .replace(/&gt;/g, "&amp;gt;")
+    .replace(/&quot;/g, "&amp;quot;")
+    .replace(/&#39;/g, "&amp;#x27;");
+}</code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode javascript"><code class="sourceCode javascript">function createRuleRow(rule) {
+  return `&lt;td&gt;${escapeHtml(rule.comment || '')}&lt;/td&gt;`;
+}</code></pre></div>
+<h3 id="content-sanitization">Content Sanitization</h3>
 <p>If your application <strong>needs to allow limited HTML</strong>, do
 the following:</p>
 <ul>
@@ -327,7 +324,7 @@ Sanitizer</strong> (Java).</li>
 <code>rel</code>, <code>target</code> (for links) - Always add
 <code>rel="noopener noreferrer"</code> to <code>&lt;a&gt;</code> tags
 that open in a new tab.</p>
-<h3 id="security-headers"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /></svg><span class="sr-only">Security Headers</span>Security Headers</h3>
+<h3 id="security-headers">Security Headers</h3>
 <p>Set the following HTTP headers globally:</p>
 <pre><code>Content-Security-Policy: default-src &#39;self&#39;; script-src &#39;self&#39;; object-src &#39;none&#39;; base-uri &#39;none&#39;;
 X-Content-Type-Options: nosniff
@@ -336,7 +333,7 @@ X-Frame-Options: DENY</code></pre>
 <li>Set cookies with <code>HttpOnly</code>, <code>Secure</code>, and
 <code>SameSite=Strict</code>.</li>
 </ul>
-<h2 id="cvss-score-estimate"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /></svg><span class="sr-only">CVSS Score Estimate</span>CVSS Score Estimate</h2>
+<h2 id="cvss-score-estimate">CVSS Score Estimate</h2>
 <table>
 <thead>
 <tr class="header">
@@ -382,7 +379,7 @@ X-Frame-Options: DENY</code></pre>
 <blockquote>
 <p>Use the CVSS Calculator: https://www.first.org/cvss/calculator/</p>
 </blockquote>
-<h2 id="conclusion"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /></svg><span class="sr-only">Conclusion</span>Conclusion</h2>
+<h2 id="conclusion">Conclusion</h2>
 <p>The application was found to reflect and persist unsanitized user
 input in HTML contexts, resulting in both reflected and stored XSS
 vulnerabilities. Importantly, the vulnerability did not originate from
