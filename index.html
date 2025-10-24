@@ -16,10 +16,26 @@
     }
     .container {
       width: 100%;
-      max-width: 960px;
-      margin: auto;
+      max-width: none;
+      margin: 0;
       padding: 40px;
       background-color: #000 !important;
+    }
+    /* Override nested/pandoc-inserted html/body rules that force a narrow
+       centered column. The pandoc fragment inside this file includes its
+       own `html` and `body` tags which browsers treat as elements and
+       their global rules can narrow the layout. Target those nested
+       elements inside the .container and neutralize the constraining
+       styles. */
+    .container body,
+    .container html {
+      max-width: none !important;
+      margin: 0 !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      background-color: transparent !important;
+      color: inherit !important;
+      width: auto !important;
     }
     pre, code {
       background-color: #1a1a1a;
