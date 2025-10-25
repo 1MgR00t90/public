@@ -66,6 +66,17 @@
       max-width: 100%;
       border: 1px solid #444;
       border-radius: 4px;
+      display: block;
+      margin: 2rem auto;
+    }
+    figure {
+      text-align: center;
+      margin: 2rem auto;
+    }
+    figcaption {
+      margin-top: 0.5rem;
+      font-style: italic;
+      color: #999;
     }
     h1, h2, h3, h4 {
       color: #fff;
@@ -118,6 +129,7 @@ affected. This report should not be misinterpreted as an indication of
 vulnerabilities in any live or commercial system. All sensitive details
 have been removed or altered. No real-world system or data is
 disclosed.</p>
+<p>As a security researcher without full-time development experience, and considering the application's AI-assisted development nature, although the testing and reporting was done manually, the "remediation recommendations" section in this report was researched and formulated with the assistance of AI to ensure technically accurate information.</p>
 </blockquote>
 <h2 id="system-profile">System Profile</h2>
 <blockquote>
@@ -175,6 +187,9 @@ XSS)</li>
 rendered unsanitized, enabling phishing attacks through malicious
 links.</p>
 <h2 id="enumeration">Enumeration</h2>
+
+<p><em>Initial Approach:</em> Began with standard reconnaissance using nmap. Given the web application scope, transitioned to web-focused tools. Nikto scan was attempted but provided limited useful information about the application architecture.</p>
+
 <table>
 <thead>
 <tr class="header">
@@ -183,17 +198,19 @@ links.</p>
 </thead>
 <tbody>
 <tr class="odd">
-<td><strong>Frontend</strong>: JavaScript</td>
+<td><strong>Frontend</strong>: JavaScript (jQuery identified in source code)</td>
 </tr>
 <tr class="even">
-<td><strong>Backend</strong>: Flask (Python)</td>
+<td><strong>Backend</strong>: Flask (Python) - identified via server headers</td>
 </tr>
 <tr class="odd">
-<td><strong>APIs Consumed</strong>: cloud-based network firewall
-API</td>
+<td><strong>APIs Consumed</strong>: cloud-based network firewall API</td>
 </tr>
 </tbody>
 </table>
+
+<p><em>Note:</em> Potentially outdated jQuery version detected. Further investigation of version-specific vulnerabilities pending.</p>
+
 <table>
 <thead>
 <tr class="header">
@@ -202,13 +219,16 @@ API</td>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Burp Suite Community</td>
+<td>Burp Suite Community (still learning some of the advanced features)</td>
 </tr>
 <tr class="even">
 <td>Wappalyzer</td>
 </tr>
 <tr class="odd">
-<td>Browser DevTools</td>
+<td>Browser DevTools (super helpful for watching network requests)</td>
+</tr>
+<tr class="even">
+<td>OWASP ZAP (used initially but switched to Burp)</td>
 </tr>
 </tbody>
 </table>
@@ -234,15 +254,21 @@ path of the system</em>.</p>
 </figure>
 <h2 id="proof-of-concept">Proof of Concept</h2>
 <h3 id="reflected-xss">1. Reflected XSS</h3>
+
+<p><em>Discovery Process:</em> Started with basic input validation testing using special characters. Upon noticing &lt; and &gt; characters were not escaped, proceeded with:</p>
+
 <ul>
-<li>Payload: <code>&lt;script&gt;alert(1)&lt;/script&gt;</code></li>
-<li>Behavior: Reflected directly in HTTP response upon form
-submission.</li>
+<li>Initial test: <code>&lt;h1&gt;test&lt;/h1&gt;</code> - confirmed HTML injection possibility</li>
+<li>Secondary test: <code>&lt;script&gt;console.log('test')&lt;/script&gt;</code> - unsuccessful (possible CSP implementation)</li>
+<li>Final test: <code>&lt;script&gt;alert(1)&lt;/script&gt;</code> - vulnerability confirmed</li>
 </ul>
+
+<p><em>Additional observation:</em> The application implements partial payload filtering, but allows <code>&lt;script&gt;</code> tags through. Further research needed on filter bypass techniques.</p>
+
 <figure>
 <img src="images/xss%20injection-yt-burpsuite.png"
 alt="Reflected XSS Injection" />
-<figcaption aria-hidden="true">Reflected XSS Injection</figcaption>
+<figcaption aria-hidden="true">Reflected XSS Injection captured via Burp Suite proxy intercept</figcaption>
 </figure>
 <h3 id="stored-xss-persistent">2. Stored XSS (Persistent)</h3>
 <ul>
@@ -277,6 +303,20 @@ alt="vuln-code" /></p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode javascript"><code class="sourceCode javascript">function createRuleRow(rule) {
   return `&lt;td&gt;${rule.comment || ''}&lt;/td&gt;`; // 🚨 No sanitization
 }</code></pre></div>
+
+<p><strong>JavaScript Sink Analysis:</strong></p>
+<figure>
+<img src="images/js-sink.png" alt="JavaScript element.innerHTML sink vulnerability" />
+<figcaption>JavaScript element.innerHTML sink point allowing XSS exploitation</figcaption>
+</figure>
+<p>The vulnerability stems from using element.innerHTML as a JavaScript sink point. This DOM property is particularly dangerous because:</p>
+<ul>
+<li>When element.innerHTML is set, the browser parses the new content as HTML, including any embedded <code>&lt;script&gt;</code> tags or JavaScript events</li>
+<li>Unlike textContent, innerHTML processes HTML entities and executes any JavaScript found in attributes like onclick, onmouseover, etc.</li>
+<li>The browser's HTML parser runs immediately when innerHTML is set, making it an active sink that can execute malicious code instantly</li>
+</ul>
+<p>In this case, rule comments flow directly into element.innerHTML without sanitization, creating a critical XSS vector. An attacker can inject payloads like <code>&lt;img src=x onerror=alert(1)&gt;</code> that execute immediately when the comment is displayed.</p>
+
 <h2 id="impact">Impact</h2>
 <ul>
 <li>Credential theft via phishing links</li>
@@ -294,6 +334,13 @@ not accept HTML or JavaScript.</li>
 validators).</li>
 </ul>
 <h3 id="output-encoding-escaping">Output Encoding / Escaping</h3>
+<p><strong>Best Practice:</strong> Avoid using element.innerHTML entirely. Instead, use safer alternatives:</p>
+<ul>
+<li>Use element.textContent for text-only content</li>
+<li>Use document.createElement() and appendChild() for DOM manipulation</li>
+<li>If HTML strings must be used, implement strict escaping:</li>
+</ul>
+
 <div class="sourceCode" id="cb3"><pre class="sourceCode javascript"><code class="sourceCode javascript">function escapeHtml(text) {
   return text
     .replace(/&amp;/g, "&amp;amp;")
@@ -302,7 +349,17 @@ validators).</li>
     .replace(/&quot;/g, "&amp;quot;")
     .replace(/&#39;/g, "&amp;#x27;");
 }</code></pre></div>
-<div class="sourceCode" id="cb4"><pre class="sourceCode javascript"><code class="sourceCode javascript">function createRuleRow(rule) {
+
+<p><strong>Safe Implementation:</strong></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode javascript"><code class="sourceCode javascript">// Instead of innerHTML, use:
+function createRuleRow(rule) {
+  const td = document.createElement('td');
+  td.textContent = rule.comment || '';
+  return td;
+}
+
+// Or if escaping HTML is required:
+function createRuleRowWithEscaping(rule) {
   return `&lt;td&gt;${escapeHtml(rule.comment || '')}&lt;/td&gt;`;
 }</code></pre></div>
 <h3 id="content-sanitization">Content Sanitization</h3>
